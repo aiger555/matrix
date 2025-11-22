@@ -1,10 +1,597 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Calculator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .matrix-type-selector {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn-type {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-type.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .matrix-input-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .matrix-container {
+            flex: 1;
+            min-width: 250px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .matrix-input {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .matrix-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .matrix-input input {
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .matrix-input input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+            outline: none;
+        }
+
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .operation-group {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-operation {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn-operation:hover {
+            background: #218838;
+        }
+
+        .result-section {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #c3e6cb;
+            margin-top: 20px;
+        }
+
+        .result-matrix {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+            margin: 10px 0;
+        }
+
+        .scalar-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .scalar-input input {
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            width: 100px;
+        }
+
+        .matrix-layer {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .scalar-result {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            padding: 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #343a40;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
+<div class="container">
+    <h1>🧮 Matrix Calculator</h1>
 
+    <!-- Выбор типа матрицы -->
+    <div class="matrix-type-selector">
+        <button class="btn-type active" onclick="setMatrixType('2D')">2D Matrix</button>
+        <button class="btn-type" onclick="setMatrixType('3D')">3D Matrix</button>
+    </div>
+
+    <!-- Ввод матриц -->
+    <div class="matrix-input-section">
+        <div class="matrix-container">
+            <h3>Matrix A</h3>
+            <div id="matrixA-input" class="matrix-input"></div>
+        </div>
+
+        <div class="matrix-container">
+            <h3>Matrix B</h3>
+            <div id="matrixB-input" class="matrix-input"></div>
+        </div>
+
+        <div class="matrix-container">
+            <h3>Matrix C</h3>
+            <div id="matrixC-input" class="matrix-input"></div>
+        </div>
+
+        <div class="matrix-container">
+            <h3>Matrix D</h3>
+            <div id="matrixD-input" class="matrix-input"></div>
+        </div>
+    </div>
+
+    <!-- Операции -->
+    <div class="operations-grid">
+        <!-- Базовые операции с двумя матрицами -->
+        <div class="operation-group">
+            <h4>Basic Operations (A and B)</h4>
+            <button class="btn-operation" onclick="performOperation('add')">
+                <i class="fas fa-plus"></i> A + B
+            </button>
+            <button class="btn-operation" onclick="performOperation('subtract')">
+                <i class="fas fa-minus"></i> A - B
+            </button>
+            <button class="btn-operation" onclick="performOperation('multiply')">
+                <i class="fas fa-times"></i> A × B
+            </button>
+            <button class="btn-operation" onclick="performOperation('divide')">
+                <i class="fas fa-divide"></i> A ÷ B (Element-wise)
+            </button>
+        </div>
+
+        <!-- Операции с одной матрицей -->
+        <div class="operation-group">
+            <h4>Single Matrix Operations</h4>
+            <button class="btn-operation" onclick="performSingleOperation('transpose', 'A')">
+                <i class="fas fa-arrows-alt-h"></i> Transpose A
+            </button>
+            <button class="btn-operation" onclick="performSingleOperation('determinant', 'A')">
+                <i class="fas fa-calculator"></i> Determinant A
+            </button>
+            <button class="btn-operation" onclick="performSingleOperation('lowerTriangular', 'A')">
+                <i class="fas fa-caret-down"></i> Lower Triangular A
+            </button>
+            <button class="btn-operation" onclick="performSingleOperation('upperTriangular', 'A')">
+                <i class="fas fa-caret-up"></i> Upper Triangular A
+            </button>
+            <button class="btn-operation" onclick="performSingleOperation('inverse', 'A')">
+                <i class="fas fa-exchange-alt"></i> Inverse A
+            </button>
+            <button class="btn-operation" onclick="performSingleOperation('trace', 'A')">
+                <i class="fas fa-braille"></i> Trace A
+            </button>
+        </div>
+
+        <!-- Скалярные операции -->
+        <div class="operation-group">
+            <h4>Scalar Operations</h4>
+            <div class="scalar-input">
+                <input type="number" id="scalarValue" placeholder="Scalar value" value="2">
+                <button class="btn-operation" onclick="performScalarMultiply('A')">
+                    <i class="fas fa-times"></i> Multiply A by Scalar
+                </button>
+            </div>
+        </div>
+
+        <!-- Генерация специальных матриц -->
+        <div class="operation-group">
+            <h4>Generate Special Matrices</h4>
+            <button class="btn-operation" onclick="generateMatrix('identity', 3, 3)">
+                <i class="fas fa-th"></i> Identity 3x3
+            </button>
+            <button class="btn-operation" onclick="generateMatrix('zeros', 2, 2)">
+                <i class="fas fa-square"></i> Zeros 2x2
+            </button>
+            <button class="btn-operation" onclick="generateMatrix('ones', 2, 2)">
+                <i class="fas fa-th-large"></i> Ones 2x2
+            </button>
+        </div>
+
+        <!-- Операции с тремя матрицами -->
+        <div class="operation-group">
+            <h4>Triple Matrix Operations</h4>
+            <button class="btn-operation" onclick="performTripleOperation('tripleProduct')">
+                <i class="fas fa-layer-group"></i> A × B × C
+            </button>
+            <button class="btn-operation" onclick="performTripleOperation('tripleAddition')">
+                <i class="fas fa-plus-circle"></i> A + B + C
+            </button>
+        </div>
+
+        <!-- Операции с четырьмя матрицами -->
+        <div class="operation-group">
+            <h4>Quadruple Matrix Operations</h4>
+            <button class="btn-operation" onclick="performQuadrupleOperation('quadrupleProduct')">
+                <i class="fas fa-cubes"></i> A × B × C × D
+            </button>
+            <button class="btn-operation" onclick="showWeightedSumModal()">
+                <i class="fas fa-balance-scale"></i> Weighted Sum
+            </button>
+        </div>
+    </div>
+
+    <!-- Секция результатов -->
+    <div id="result-section" class="result-section" style="display: none;">
+        <h3>📊 Result</h3>
+        <div id="result-matrix" class="result-matrix"></div>
+    </div>
+</div>
+
+<script>
+    // JavaScript код из предыдущего ответа вставьте сюда
+    // (полная версия с исправлениями)
+    let currentMatrixType = '2D';
+
+    function setMatrixType(type) {
+        currentMatrixType = type;
+        document.querySelectorAll('.btn-type').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(type));
+        });
+        generateMatrixInputs();
+    }
+
+    function generateMatrixInputs() {
+        const sizes = currentMatrixType === '2D' ? { rows: 3, cols: 3 } : { rows: 3, cols: 3, depth: 3 };
+
+        ['A', 'B', 'C', 'D'].forEach(matrix => {
+            const container = document.getElementById(`matrix${matrix}-input`);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (currentMatrixType === '2D') {
+                for (let i = 0; i < sizes.rows; i++) {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'matrix-row';
+                    for (let j = 0; j < sizes.cols; j++) {
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.placeholder = '0';
+                        input.name = `matrix${matrix}[${i}][${j}]`;
+                        rowDiv.appendChild(input);
+                    }
+                    container.appendChild(rowDiv);
+                }
+            } else {
+                for (let k = 0; k < sizes.depth; k++) {
+                    const layerDiv = document.createElement('div');
+                    layerDiv.className = 'matrix-layer';
+                    layerDiv.innerHTML = `<strong>Layer ${k + 1}:</strong>`;
+                    for (let i = 0; i < sizes.rows; i++) {
+                        const rowDiv = document.createElement('div');
+                        rowDiv.className = 'matrix-row';
+                        for (let j = 0; j < sizes.cols; j++) {
+                            const input = document.createElement('input');
+                            input.type = 'number';
+                            input.placeholder = '0';
+                            input.name = `matrix${matrix}[${k}][${i}][${j}]`;
+                            rowDiv.appendChild(input);
+                        }
+                        layerDiv.appendChild(rowDiv);
+                    }
+                    container.appendChild(layerDiv);
+                }
+            }
+        });
+    }
+
+    async function performOperation(operation) {
+        const formData = new FormData();
+        collectMatrixData(formData, 'A');
+        collectMatrixData(formData, 'B');
+        formData.append('operation', operation);
+
+        try {
+            const response = await fetch('/calculate/binary', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    async function performSingleOperation(operation, matrixName) {
+        const formData = new FormData();
+        collectMatrixData(formData, matrixName);
+        formData.append('operation', operation);
+
+        try {
+            const response = await fetch('/calculate/single', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    async function performTripleOperation(operation) {
+        const formData = new FormData();
+        collectMatrixData(formData, 'A');
+        collectMatrixData(formData, 'B');
+        collectMatrixData(formData, 'C');
+        formData.append('operation', operation);
+
+        try {
+            const response = await fetch('/calculate/triple', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    async function performQuadrupleOperation(operation) {
+        const formData = new FormData();
+        collectMatrixData(formData, 'A');
+        collectMatrixData(formData, 'B');
+        collectMatrixData(formData, 'C');
+        collectMatrixData(formData, 'D');
+        formData.append('operation', operation);
+
+        try {
+            const response = await fetch('/calculate/quadruple', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    async function performScalarMultiply(matrixName) {
+        const scalarValue = document.getElementById('scalarValue').value;
+        if (!scalarValue) {
+            showError('Please enter a scalar value');
+            return;
+        }
+
+        const formData = new FormData();
+        collectMatrixData(formData, matrixName);
+        formData.append('scalar', scalarValue);
+
+        try {
+            const response = await fetch('/scalar/multiply', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    async function generateMatrix(type, rows, cols) {
+        try {
+            const response = await fetch('/generate/matrix', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    type: type,
+                    rows: rows,
+                    cols: cols
+                })
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    function showWeightedSumModal() {
+        const weights = prompt('Enter weights for A, B, C, D (comma separated):', '1,1,1,1');
+        if (weights) {
+            const weightArray = weights.split(',').map(w => parseFloat(w.trim()));
+            if (weightArray.length === 4 && weightArray.every(w => !isNaN(w))) {
+                performWeightedSum(weightArray[0], weightArray[1], weightArray[2], weightArray[3]);
+            } else {
+                showError('Please enter 4 valid numbers separated by commas');
+            }
+        }
+    }
+
+    async function performWeightedSum(w1, w2, w3, w4) {
+        const formData = new FormData();
+        collectMatrixData(formData, 'A');
+        collectMatrixData(formData, 'B');
+        collectMatrixData(formData, 'C');
+        collectMatrixData(formData, 'D');
+        formData.append('operation', 'weightedSum');
+        formData.append('w1', w1);
+        formData.append('w2', w2);
+        formData.append('w3', w3);
+        formData.append('w4', w4);
+
+        try {
+            const response = await fetch('/calculate/quadruple', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error: ' + error.message);
+        }
+    }
+
+    function collectMatrixData(formData, matrixName) {
+        const inputs = document.querySelectorAll(`input[name^="matrix${matrixName}["]`);
+        inputs.forEach(input => {
+            if (input.value !== '') {
+                formData.append(input.name, input.value);
+            }
+        });
+    }
+
+    function displayResult(data) {
+        const resultSection = document.getElementById('result-section');
+        const resultMatrix = document.getElementById('result-matrix');
+
+        if (data.success) {
+            resultSection.style.display = 'block';
+
+            if (data.type === 'scalar') {
+                resultMatrix.innerHTML = `<div class="scalar-result">
+                        <h4>Result: ${data.result.toFixed(4)}</h4>
+                    </div>`;
+            } else {
+                resultMatrix.innerHTML = formatMatrixForDisplay(data.result);
+            }
+        } else {
+            showError(data.error);
+        }
+    }
+
+    function formatMatrixForDisplay(matrix) {
+        if (!matrix) return 'No result data';
+
+        if (matrix.type === '2D' && matrix.data2D) {
+            return matrix.data2D.map(row =>
+                `[ ${row.map(val => typeof val === 'number' ? val.toFixed(2) : val).join(', ')} ]`
+            ).join('<br>');
+        } else if (matrix.type === '3D' && matrix.data3D) {
+            return matrix.data3D.map((layer, idx) =>
+                `<div class="matrix-layer"><strong>Layer ${idx + 1}:</strong><br>` +
+                layer.map(row =>
+                    `[ ${row.map(val => typeof val === 'number' ? val.toFixed(2) : val).join(', ')} ]`
+                ).join('<br>') + '</div>'
+            ).join('<br>');
+        } else {
+            return 'Invalid matrix data';
+        }
+    }
+
+    function showError(message) {
+        const resultSection = document.getElementById('result-section');
+        const resultMatrix = document.getElementById('result-matrix');
+
+        resultSection.style.display = 'block';
+        resultMatrix.innerHTML = `<div class="error-message">
+                <strong>Error:</strong> ${message}
+            </div>`;
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', function() {
+        generateMatrixInputs();
+    });
+</script>
 </body>
 </html>
