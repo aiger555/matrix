@@ -1,176 +1,72 @@
 package com.m.matrix.controller;
 
+
+import com.m.matrix.model.CalculationRequest;
 import com.m.matrix.model.Matrix;
 import com.m.matrix.service.MatrixService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 public class MatrixController {
 
-    @Autowired
-    private MatrixService matrixService;
+    private final MatrixService matrixService;
 
-
+    public MatrixController(MatrixService matrixService) {
+        this.matrixService = matrixService;
+    }
 
     @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("matrixA", new Matrix());
-        model.addAttribute("matrixB", new Matrix());
-        model.addAttribute("matrixC", new Matrix());
-        model.addAttribute("matrixD", new Matrix());
-        return "index";
+    public String showCalculator(Model model) {
+        model.addAttribute("calculationRequest", new CalculationRequest());
+        return "calculator";
     }
 
-    @PostMapping("/calculate/binary")
-    @ResponseBody
-    public Map<String, Object> calculateBinary(@RequestParam String operation,
-                                               @ModelAttribute Matrix matrixA,
-                                               @ModelAttribute Matrix matrixB) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Matrix result = matrixService.performOperation(matrixA, matrixB, operation);
-            response.put("success", true);
-            response.put("result", result);
-            response.put("type", result.getType());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+    @PostMapping("/calculate")
+    public String calculate(
+            @Valid @ModelAttribute CalculationRequest request,
+            BindingResult result,
+            Model model) {
+
+        if (result.hasErrors()) {
+            return "calculator";
         }
-        return response;
+
+        try {
+            Matrix resultMatrix = performCalculation(request);
+            model.addAttribute("result", resultMatrix);
+            model.addAttribute("calculationPerformed", true);
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        model.addAttribute("calculationRequest", request);
+        return "calculator";
     }
 
-    @PostMapping("/calculate/single")
-    @ResponseBody
-    public Map<String, Object> calculateSingle(@RequestParam String operation,
-                                               @ModelAttribute Matrix matrix) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Object result = matrixService.performSingleOperation(matrix, operation);
-            response.put("success", true);
-            if (result instanceof Matrix) {
-                response.put("result", result);
-                response.put("type", ((Matrix) result).getType());
-            } else {
-                response.put("result", result);
-                response.put("type", "scalar");
-            }
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-        }
-        return response;
-    }
-
-    @PostMapping("/calculate/triple")
-    @ResponseBody
-    public Map<String, Object> calculateTriple(@RequestParam String operation,
-                                               @ModelAttribute Matrix matrixA,
-                                               @ModelAttribute Matrix matrixB,
-                                               @ModelAttribute Matrix matrixC) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Matrix result;
-            if ("tripleProduct".equals(operation)) {
-                result = matrixService.tripleProduct(matrixA, matrixB, matrixC);
-            } else if ("tripleAddition".equals(operation)) {
-                result = matrixService.tripleAddition(matrixA, matrixB, matrixC);
-            } else {
-                throw new IllegalArgumentException("Unknown triple operation: " + operation);
-            }
-            response.put("success", true);
-            response.put("result", result);
-            response.put("type", result.getType());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-        }
-        return response;
-    }
-
-    @PostMapping("/calculate/quadruple")
-    @ResponseBody
-    public Map<String, Object> calculateQuadruple(@RequestParam String operation,
-                                                  @ModelAttribute Matrix matrixA,
-                                                  @ModelAttribute Matrix matrixB,
-                                                  @ModelAttribute Matrix matrixC,
-                                                  @ModelAttribute Matrix matrixD,
-                                                  @RequestParam(defaultValue = "1.0") double w1,
-                                                  @RequestParam(defaultValue = "1.0") double w2,
-                                                  @RequestParam(defaultValue = "1.0") double w3,
-                                                  @RequestParam(defaultValue = "1.0") double w4) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Matrix result;
-            if ("quadrupleProduct".equals(operation)) {
-                result = matrixService.quadrupleProduct(matrixA, matrixB, matrixC, matrixD);
-            } else if ("weightedSum".equals(operation)) {
-                result = matrixService.weightedSum(matrixA, matrixB, matrixC, matrixD, w1, w2, w3, w4);
-            } else {
-                throw new IllegalArgumentException("Unknown quadruple operation: " + operation);
-            }
-            response.put("success", true);
-            response.put("result", result);
-            response.put("type", result.getType());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-        }
-        return response;
-    }
-
-    @PostMapping("/scalar/multiply")
-    @ResponseBody
-    public Map<String, Object> scalarMultiply(@ModelAttribute Matrix matrix,
-                                              @RequestParam double scalar) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Matrix result = matrixService.scalarMultiply(matrix, scalar);
-            response.put("success", true);
-            response.put("result", result);
-            response.put("type", result.getType());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-        }
-        return response;
-    }
-
-    @PostMapping("/generate/matrix")
-    @ResponseBody
-    public Map<String, Object> generateMatrix(@RequestParam String type,
-                                              @RequestParam int rows,
-                                              @RequestParam int cols,
-                                              @RequestParam(defaultValue = "1") int depth) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Matrix result;
-            switch (type) {
-                case "identity":
-                    if (rows != cols) throw new IllegalArgumentException("Identity matrix must be square");
-                    result = matrixService.identity(rows);
-                    break;
-                case "zeros":
-                    result = matrixService.zeros(rows, cols);
-                    break;
-                case "ones":
-                    result = matrixService.ones(rows, cols);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown matrix type: " + type);
-            }
-            response.put("success", true);
-            response.put("result", result);
-            response.put("type", result.getType());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-        }
-        return response;
+    private Matrix performCalculation(CalculationRequest request) {
+        return switch (request.getOperation()) {
+            case "add" -> matrixService.add(request.getMatrixA(), request.getMatrixB());
+            case "subtract" -> matrixService.subtract(request.getMatrixA(), request.getMatrixB());
+            case "multiply" -> matrixService.multiply(request.getMatrixA(), request.getMatrixB());
+            case "determinantA" -> Matrix.fromArray(new double[][]{
+                    {matrixService.determinant(request.getMatrixA()), 0.0},
+                    {0.0, 0.0}
+            });
+            case "determinantB" -> Matrix.fromArray(new double[][]{
+                    {matrixService.determinant(request.getMatrixB()), 0.0},
+                    {0.0, 0.0}
+            });
+            case "inverseA" -> matrixService.inverse(request.getMatrixA());
+            case "inverseB" -> matrixService.inverse(request.getMatrixB());
+            case "transposeA" -> matrixService.transpose(request.getMatrixA());
+            case "transposeB" -> matrixService.transpose(request.getMatrixB());
+            default -> throw new IllegalArgumentException("Unknown operation: " + request.getOperation());
+        };
     }
 }

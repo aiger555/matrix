@@ -1,69 +1,53 @@
 package com.m.matrix.model;
 
-import java.util.Arrays;
+import jakarta.validation.constraints.NotNull;
 
 public class Matrix {
-    private String name;
-    private double[][] data2D;
-    private double[][][] data3D;
-    private String type; // "2D" или "3D"
-    private int rows;
-    private int cols;
-    private int depth;
+    @NotNull
+    private Double a11;
+    @NotNull
+    private Double a12;
+    @NotNull
+    private Double a21;
+    @NotNull
+    private Double a22;
 
-    // Конструкторы
+    // Constructors
     public Matrix() {}
 
-    public Matrix(String name, double[][] data) {
-        this.name = name;
-        this.data2D = data;
-        this.type = "2D";
-        this.rows = data.length;
-        this.cols = data[0].length;
+    public Matrix(Double a11, Double a12, Double a21, Double a22) {
+        this.a11 = a11;
+        this.a12 = a12;
+        this.a21 = a21;
+        this.a22 = a22;
     }
 
-    public Matrix(String name, double[][][] data) {
-        this.name = name;
-        this.data3D = data;
-        this.type = "3D";
-        this.depth = data.length;
-        this.rows = data[0].length;
-        this.cols = data[0][0].length;
+    // Getters and Setters
+    public Double getA11() { return a11; }
+    public void setA11(Double a11) { this.a11 = a11; }
+
+    public Double getA12() { return a12; }
+    public void setA12(Double a12) { this.a12 = a12; }
+
+    public Double getA21() { return a21; }
+    public void setA21(Double a21) { this.a21 = a21; }
+
+    public Double getA22() { return a22; }
+    public void setA22(Double a22) { this.a22 = a22; }
+
+    // Utility method to get as 2D array
+    public double[][] toArray() {
+        return new double[][] {
+                {a11, a12},
+                {a21, a22}
+        };
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public double[][] getData2D() { return data2D; }
-    public void setData2D(double[][] data2D) {
-        this.data2D = data2D;
-        this.type = "2D";
-        this.rows = data2D.length;
-        this.cols = data2D[0].length;
-    }
-
-    public double[][][] getData3D() { return data3D; }
-    public void setData3D(double[][][] data3D) {
-        this.data3D = data3D;
-        this.type = "3D";
-        this.depth = data3D.length;
-        this.rows = data3D[0].length;
-        this.cols = data3D[0][0].length;
-    }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public int getRows() { return rows; }
-    public int getCols() { return cols; }
-    public int getDepth() { return depth; }
-
-    @Override
-    public String toString() {
-        if ("2D".equals(type)) {
-            return Arrays.deepToString(data2D);
-        } else {
-            return Arrays.deepToString(data3D);
+    // Create matrix from 2D array
+    public static Matrix fromArray(double[][] array) {
+        if (array.length != 2 || array[0].length != 2) {
+            throw new IllegalArgumentException("Array must be 2x2");
         }
+        return new Matrix(array[0][0], array[0][1], array[1][0], array[1][1]);
     }
 }

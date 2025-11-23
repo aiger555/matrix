@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>2x2 Matrix Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .matrix-container { display: flex; justify-content: space-between; margin: 20px 0; }
+    .matrix { border: 2px solid #333; padding: 20px; border-radius: 5px; }
+    .matrix-input { width: 60px; margin: 5px; text-align: center; }
+    .operations { margin: 20px 0; text-align: center; }
+    .btn { margin: 5px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .btn:hover { background: #0056b3; }
+    .result { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+    .error { color: red; margin: 10px 0; }
+    .matrix-display { font-family: monospace; font-size: 16px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>2x2 Matrix Calculator</h1>
+
+  <form th:object="${calculationRequest}" method="post" action="/calculate">
+    <div class="matrix-container">
+      <!-- Matrix A -->
+      <div class="matrix">
+        <h3>Matrix A</h3>
+        <table>
+          <tr>
+            <td><input type="number" step="any" th:field="*{matrixA.a11}" class="matrix-input" required></td>
+            <td><input type="number" step="any" th:field="*{matrixA.a12}" class="matrix-input" required></td>
+          </tr>
+          <tr>
+            <td><input type="number" step="any" th:field="*{matrixA.a21}" class="matrix-input" required></td>
+            <td><input type="number" step="any" th:field="*{matrixA.a22}" class="matrix-input" required></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Matrix B -->
+      <div class="matrix">
+        <h3>Matrix B</h3>
+        <table>
+          <tr>
+            <td><input type="number" step="any" th:field="*{matrixB.a11}" class="matrix-input" required></td>
+            <td><input type="number" step="any" th:field="*{matrixB.a12}" class="matrix-input" required></td>
+          </tr>
+          <tr>
+            <td><input type="number" step="any" th:field="*{matrixB.a21}" class="matrix-input" required></td>
+            <td><input type="number" step="any" th:field="*{matrixB.a22}" class="matrix-input" required></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Operations -->
+    <div class="operations">
+      <h3>Operations</h3>
+
+      <div>
+        <button type="submit" name="operation" value="add" class="btn">A + B</button>
+        <button type="submit" name="operation" value="subtract" class="btn">A - B</button>
+        <button type="submit" name="operation" value="multiply" class="btn">A × B</button>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <button type="submit" name="operation" value="determinantA" class="btn">det(A)</button>
+        <button type="submit" name="operation" value="determinantB" class="btn">det(B)</button>
+        <button type="submit" name="operation" value="inverseA" class="btn">A⁻¹</button>
+        <button type="submit" name="operation" value="inverseB" class="btn">B⁻¹</button>
+        <button type="submit" name="operation" value="transposeA" class="btn">Aᵀ</button>
+        <button type="submit" name="operation" value="transposeB" class="btn">Bᵀ</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Error Message -->
+  <div th:if="${error}" class="error">
+    Error: <span th:text="${error}"></span>
+  </div>
+
+  <!-- Result -->
+  <div th:if="${calculationPerformed}" class="result">
+    <h3>Result:</h3>
+    <div class="matrix-display" th:if="${result}">
+      [ [ <span th:text="${result.a11}"></span> , <span th:text="${result.a12}"></span> ]<br>
+      [ <span th:text="${result.a21}"></span> , <span th:text="${result.a22}"></span> ] ]
+    </div>
+  </div>
+</div>
+</body>
+</html>
