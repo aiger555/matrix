@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>3x3 Matrix Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .matrix-container { display: flex; justify-content: space-between; margin: 30px 0; gap: 20px; }
+        .matrix { border: 2px solid #4CAF50; padding: 20px; border-radius: 8px; background: #f9f9f9; flex: 1; }
+        .matrix-input { width: 70px; margin: 3px; text-align: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .operations { margin: 30px 0; text-align: center; }
+        .btn { margin: 5px; padding: 12px 24px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.3s; }
+        .btn:hover { background: #45a049; }
+        .btn-scalar { background: #2196F3; }
+        .btn-scalar:hover { background: #1976D2; }
+        .result { margin: 30px 0; padding: 20px; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50; }
+        .error { color: #d32f2f; margin: 15px 0; padding: 15px; background: #ffebee; border-radius: 6px; border-left: 4px solid #d32f2f; }
+        .matrix-display { font-family: 'Courier New', monospace; font-size: 16px; line-height: 1.6; background: white; padding: 15px; border-radius: 6px; display: inline-block; }
+        .scalar-result { font-size: 24px; font-weight: bold; color: #2196F3; }
+        h1 { color: #2E7D32; text-align: center; margin-bottom: 30px; }
+        h3 { color: #4CAF50; margin-bottom: 15px; }
+        .operation-group { margin: 15px 0; }
+        .operation-group h4 { color: #666; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>3×3 Matrix Calculator</h1>
+
+    <form th:object="${calculationRequest}" method="post" action="/calculate">
+        <div class="matrix-container">
+            <!-- Matrix A -->
+            <div class="matrix">
+                <h3>Matrix A</h3>
+                <table style="margin: 0 auto;">
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixA.a11}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a12}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a13}" class="matrix-input" required></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixA.a21}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a22}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a23}" class="matrix-input" required></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixA.a31}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a32}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixA.a33}" class="matrix-input" required></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Matrix B -->
+            <div class="matrix">
+                <h3>Matrix B</h3>
+                <table style="margin: 0 auto;">
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixB.a11}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a12}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a13}" class="matrix-input" required></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixB.a21}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a22}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a23}" class="matrix-input" required></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" step="any" th:field="*{matrixB.a31}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a32}" class="matrix-input" required></td>
+                        <td><input type="number" step="any" th:field="*{matrixB.a33}" class="matrix-input" required></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Operations -->
+        <div class="operations">
+            <div class="operation-group">
+                <h4>Binary Operations (A and B)</h4>
+                <button type="submit" name="operation" value="add" class="btn">A + B</button>
+                <button type="submit" name="operation" value="subtract" class="btn">A - B</button>
+                <button type="submit" name="operation" value="multiply" class="btn">A × B</button>
+            </div>
+
+            <div class="operation-group">
+                <h4>Matrix A Operations</h4>
+                <button type="submit" name="operation" value="determinantA" class="btn btn-scalar">det(A)</button>
+                <button type="submit" name="operation" value="inverseA" class="btn">A⁻¹</button>
+                <button type="submit" name="operation" value="transposeA" class="btn">Aᵀ</button>
+                <button type="submit" name="operation" value="traceA" class="btn btn-scalar">trace(A)</button>
+            </div>
+
+            <div class="operation-group">
+                <h4>Matrix B Operations</h4>
+                <button type="submit" name="operation" value="determinantB" class="btn btn-scalar">det(B)</button>
+                <button type="submit" name="operation" value="inverseB" class="btn">B⁻¹</button>
+                <button type="submit" name="operation" value="transposeB" class="btn">Bᵀ</button>
+                <button type="submit" name="operation" value="traceB" class="btn btn-scalar">trace(B)</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Error Message -->
+    <div th:if="${error}" class="error">
+        <strong>Error:</strong> <span th:text="${error}"></span>
+    </div>
+
+    <!-- Result -->
+    <div th:if="${calculationPerformed}" class="result">
+        <h3>Result:</h3>
+        <div th:if="${resultType == 'matrix'}" class="matrix-display">
+            [ [ <span th:text="${#numbers.formatDecimal(result.a11, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a12, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a13, 1, 4)}"></span> ]<br>
+            [ <span th:text="${#numbers.formatDecimal(result.a21, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a22, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a23, 1, 4)}"></span> ]<br>
+            [ <span th:text="${#numbers.formatDecimal(result.a31, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a32, 1, 4)}"></span> ,
+            <span th:text="${#numbers.formatDecimal(result.a33, 1, 4)}"></span> ] ]
+        </div>
+        <div th:if="${resultType == 'scalar'}" class="scalar-result">
+            <span th:text="${#numbers.formatDecimal(result, 1, 4)}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
